@@ -20,6 +20,8 @@ int main(void)
 	ALLEGRO_DISPLAY *display = NULL;
 	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
 	ALLEGRO_TIMER *timer = NULL;
+	// Separate timer for 30 second countdown
+	ALLEGRO_TIMER* exit_timer = NULL;
 
 	//program init
 	if(!al_init())										//initialize Allegro
@@ -38,13 +40,22 @@ int main(void)
 
 	al_set_target_bitmap(al_get_backbuffer(display));
 	event_queue = al_create_event_queue();
+
+	// Register exit timer to the event queue
+	exit_timer = al_create_timer(30.0);
+	al_register_event_source(event_queue, al_get_timer_event_source(exit_timer));
+
 	timer = al_create_timer(1.0 / FPS);
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
 	al_register_event_source(event_queue, al_get_timer_event_source(timer));
 	al_clear_to_color(al_map_rgb(0,0,0));
 	arrow.drawArrow();
 	al_flip_display();
+
+	// Start both timers
 	al_start_timer(timer);
+	al_start_timer(exit_timer);
+
 	while(!done)
 	{
 		ALLEGRO_EVENT ev;
@@ -60,6 +71,13 @@ int main(void)
 				}
 			}
 		}
+
+		// When exit timer hits 0, the game loop will exit
+		else if (ev.timer.source == exit_timer) {
+			done = true;
+
+		}
+
 		else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
 		{
 			done = true;
