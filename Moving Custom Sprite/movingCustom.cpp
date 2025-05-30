@@ -1,5 +1,7 @@
 #include <allegro5\allegro.h>
 #include <allegro5\allegro_primitives.h>
+#include <allegro5\allegro_font.h>
+#include <allegro5\allegro_ttf.h>
 #include "arrow.h";
 #include "bullet.h"
 
@@ -13,7 +15,8 @@ int main(void)
 
 	//variables
 	int width = 640;
-	int height = 480;
+	// Object collision is restricted to a y value of 480
+	int height = 520;
 	bool done = false;
 
 	//allegro variable
@@ -22,6 +25,9 @@ int main(void)
 	ALLEGRO_TIMER *timer = NULL;
 	// Separate timer for 30 second countdown
 	ALLEGRO_TIMER* exit_timer = NULL;
+	// A font object for exit timer and score
+	ALLEGRO_FONT* font = NULL;
+	
 
 	//program init
 	if(!al_init())										//initialize Allegro
@@ -35,6 +41,12 @@ int main(void)
 	//addon init
 	al_install_keyboard();
 	al_init_primitives_addon();
+	al_init_font_addon();
+	al_init_ttf_addon();
+
+	// Load installed font
+	font = al_load_font("16020_FUTURAM.ttf", 16, 0);
+	//al
 	arrow.create_arrow_bitmap(display);
 
 
@@ -56,13 +68,22 @@ int main(void)
 	al_start_timer(timer);
 	al_start_timer(exit_timer);
 
+	double start_time = al_get_time(); // Clocks the time when program starts
+	const double duration = 30.0; // Duration for timer
+
 	while(!done)
 	{
 		ALLEGRO_EVENT ev;
 		al_wait_for_event(event_queue, &ev);
 
+
 		if(ev.type == ALLEGRO_EVENT_TIMER)
 		{
+			// When exit timer hits 0, the game loop will exit
+			if (ev.timer.source == exit_timer) {
+				done = true;
+			}
+
 			redraw = true;
 			for(int i=0;i<10;i++)
 			{
@@ -72,11 +93,6 @@ int main(void)
 			}
 		}
 
-		// When exit timer hits 0, the game loop will exit
-		else if (ev.timer.source == exit_timer) {
-			done = true;
-
-		}
 
 		else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
 		{
@@ -107,6 +123,9 @@ int main(void)
 		{
 			redraw = false; 
 
+			// Clear the screen before drawing new time,score, and bitmaps
+			al_clear_to_color(al_map_rgb(0, 0, 0));
+
 			if (arrow.getSpeed()!=0){
 				arrow.erase_arrow();
 				arrow.move_arrow(width,height);
@@ -118,6 +137,16 @@ int main(void)
 				score+=mybullet[i].move_bullet(arrow.getX(),arrow.getY(),32,32,height);
 			}
 		}
+
+		// Calculate and display remaining seconds
+		double elapsed = al_get_time() - start_time;
+		int remaining = duration - static_cast<int>(elapsed);
+		// No negative time allowed
+		if (remaining < 0) remaining = 0;
+
+		// Display timer and score at top left of display
+		al_draw_textf(font, al_map_rgb(200, 200, 200), 16, 16, ALLEGRO_ALIGN_LEFT, "TIMER: %d", remaining);
+
 		al_flip_display();
 	}
 	al_destroy_event_queue(event_queue);
