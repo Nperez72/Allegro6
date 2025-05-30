@@ -49,6 +49,10 @@ int main(void)
 	//al
 	arrow.create_arrow_bitmap(display);
 
+	// Create a recyclable array of bullet bitmaps
+	for (int i = 0; i < 10; i++) {
+	    mybullet[i].init_bitmap();
+	}
 
 	al_set_target_bitmap(al_get_backbuffer(display));
 	event_queue = al_create_event_queue();
@@ -134,7 +138,8 @@ int main(void)
 			for(int i=0;i<10;i++)
 			{
 				mybullet[i].erase_bullet();
-				score+=mybullet[i].move_bullet(arrow.getX(),arrow.getY(),32,32,height);
+				// Collision height limit changed to 480
+				score += mybullet[i].move_bullet(arrow.getX(), arrow.getY(), 32, 32, 480);
 			}
 		}
 
@@ -144,8 +149,9 @@ int main(void)
 		// No negative time allowed
 		if (remaining < 0) remaining = 0;
 
-		// Display timer and score at top left of display
-		al_draw_textf(font, al_map_rgb(200, 200, 200), 16, 16, ALLEGRO_ALIGN_LEFT, "TIMER: %d", remaining);
+		// Display timer and score at bottom left of display
+		al_draw_textf(font, al_map_rgb(200, 200, 200), 16, 488, ALLEGRO_ALIGN_LEFT, "TIMER: %d", remaining);
+		al_draw_textf(font, al_map_rgb(200, 200, 200), 200, 488, ALLEGRO_ALIGN_LEFT, "SCORE: %d", score);
 
 		al_flip_display();
 	}
